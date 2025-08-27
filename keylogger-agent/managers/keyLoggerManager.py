@@ -1,9 +1,9 @@
 import threading
 from typing import List, Optional
 from datetime import datetime
-from ikeylogger import IKeyLogger
-from iwriter import IWriter
-from encryptor import Encryptor
+from interfaces.IkeyLogger import IKeyLogger
+from interfaces.iwriter import IWriter
+from encryption import Encryptor
 from config import Config
 
 
