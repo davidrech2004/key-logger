@@ -16,6 +16,3 @@ class Encryptor:
     def decrypt(self, text) -> str:
         # ההמרה ההפוכה היא בדיוק אותו הדבר
         return self.encrypt(text)
-    
-en = Encryptor(42)
-print(en.decrypt(en.encrypt("hello david")))
