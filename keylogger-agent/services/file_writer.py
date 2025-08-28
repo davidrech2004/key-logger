@@ -1,5 +1,4 @@
 import os 
-from datetime import datetime
 from interfaces.iwriter import IWriter
 
 class FileWriter(IWriter):
@@ -18,4 +17,4 @@ class FileWriter(IWriter):
             os.makedirs(path)
         
     def _generate_filename(self):
-        return f"log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+        return f"log.txt"
