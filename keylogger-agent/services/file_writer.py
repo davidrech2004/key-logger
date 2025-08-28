@@ -1,5 +1,4 @@
 import os 
-from datetime import datetime
 from interfaces.iwriter import IWriter
 
 class FileWriter(IWriter):
