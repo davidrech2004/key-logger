@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 # פונקציה אבסטרקטית להתחלת הפעולה סיום הפעולה וקבלת המידע
-class IkeyLogger(ABC):
+class Ikeylogger(ABC):
     @abstractmethod
     def start_logging(self) -> None:
         pass
