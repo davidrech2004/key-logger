@@ -1,5 +1,6 @@
 import os 
 from interfaces.iwriter import IWriter
+from datetime import datetime
 
 class FileWriter(IWriter):
     def __init__(self, file_path:str):
@@ -10,8 +11,7 @@ class FileWriter(IWriter):
         file_name = self._generate_filename()
         full_path = os.path.join(self.file_path, file_name)
         with open(full_path, "a", encoding="utf-8") as f:
-            f.write(f"[{machine_name}] {data}\n")
-
+            f.write(f"[{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}] [{machine_name}] {data}\n")
     def _ensure_directory_exists(self, path:str):
         if not os.path.exists(path):
             os.makedirs(path)
