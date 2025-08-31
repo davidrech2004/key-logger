@@ -11,8 +11,7 @@ class Encryptor:
         else:
             self.key = key
 
-    def encrypt(self, text:str) -> str:
-        print(text)
+    def transform(self, text:str) -> str:
         # בשביל לעשות את ההמרה מה שעושים זה בעצם הופכים כל אות מהמילה שמקבלים לקוד יוניקוד ועושים הצפנת יוניקוד ומוסיפים את זה למערך אחרי שעושים המרה הפוכה
         result = []
         for char in text:
@@ -22,6 +21,9 @@ class Encryptor:
             result.append(chr(encrypted % 0x110000))
         return ''.join(result)
     
+    def encrypt(self, text:str) -> str:
+        return self.transform(text)
+    
     def decrypt(self, text) -> str:
         # ההמרה ההפוכה היא בדיוק אותו הדבר
-        return self.encrypt(text)
+        return self.transform(text)

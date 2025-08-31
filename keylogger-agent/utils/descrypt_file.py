@@ -1,5 +1,4 @@
-from encryptor import Encryptor
-import sys 
+from encryption.encryptor import Encryptor
 
 # פונקציה שמפעילה את המצפין על הפייל ומתרגם אותו
 def decrypt_file(file_path: str, key:str) -> str:
