@@ -8,15 +8,11 @@ class FileWriter(IWriter):
         self._ensure_directory_exists(file_path)
 
     def send_data(self, data:str, machine_name:str):
-        file_name = self._generate_filename()
+        file_name = "log.txt"
         full_path = os.path.join(self.file_path, file_name)
         with open(full_path, "a", encoding="utf-8") as f:
             f.write(f"[{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}] [{machine_name}] {data}\n")
+
     def _ensure_directory_exists(self, path:str):
         if not os.path.exists(path):
             os.makedirs(path)
-        
-    def _generate_filename(self):
-======
-        return f"log.txt"
-

