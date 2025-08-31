@@ -1,26 +1,22 @@
 from interfaces.iwriter import IWriter
 import requests
-from encryption import Encryptor  
+from encryption.encryptor import Encryptor
 
-# פונקצייה שמקבלת מידע ומצפינה אותו ומכניסה למילון את המידע ואת המיקום שצריך לשלוח את המידע ומוציאה הודעה אם הצליחה
 class NetworkWriter(IWriter):
-    def __init__(self, key:int, server_url:str):
+    def __init__(self, key: int, server_url: str):
         self.key = key
-        self.server_url = server_url
+        self.server_url = server_url.rstrip("/")  
         self.encryptor = Encryptor(key)
 
-    def send_data(self, data:str, machine_name:str) -> None:
-        # ההצפנה של המידע שמקבלים
+    def send_data(self, data: str, machine_name: str) -> None:
         encrypted_data = self.encryptor.encrypt(data)
-        payload = {"machin_name" : machine_name,
-                   "data" : encrypted_data}
-        
+        payload = {"machine": machine_name, "data": encrypted_data}
+
+        url = f"{self.server_url}/api/upload"
+        print(f"Sending to URL: {url}")  
         try:
-            # מבקש מהשרת להעלות את המידע
-            response = requests.post(self.server_url, json=payload)
-            # בודק אם השרת העלה ואם יש שגיאה (כל דבר שנקבל שהוא לא 200)
+            response = requests.post(url, json=payload)
             response.raise_for_status()
-            print(f"Data sent successfully to {self.server_url}")
+            print(f"✅ Data sent successfully to {url}")
         except requests.RequestException as e:
-            # ההודעה במקרה של שגיאה
-            print(f"Failed to send data: {e}")
+            print(f"❌ Failed to send data: {e}")
