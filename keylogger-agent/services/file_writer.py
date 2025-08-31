@@ -17,4 +17,6 @@ class FileWriter(IWriter):
             os.makedirs(path)
         
     def _generate_filename(self):
+======
         return f"log.txt"
+
