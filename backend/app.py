@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 import os
-import time
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # הגדרת תיקייה מרכזית לנתונים
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), "data")
@@ -38,8 +39,8 @@ def upload():
     # יצירת שם קובץ חדש לפי זמן
     file_path = os.path.join(machine_folder, "log.txt")
     # כתיבה לקובץ
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(log_data)
+    with open(file_path, "a", encoding="utf-8") as f:
+        f.write(log_data + "\n" + "="*50 + "\n")
 
     return jsonify({"status": "success", "file": file_path}), 200
 
