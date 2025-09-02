@@ -5,6 +5,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
+
 # הגדרת תיקייה מרכזית לנתונים
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), "data")
 if not os.path.exists(DATA_FOLDER):
