@@ -1,17 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logs Manager</title>
-    <link rel="stylesheet" href="./style.css">
-    <script src="./keylogger.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keylogger Viewer</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Logs</h1>
-
-    <div id="machines-container">
-        
+  <h1>צפייה בלוגי Keylogger</h1>
+  
+  <div id="controls">
+    <div>
+      <label for="machines">בחר מחשב:</label>
+      <select id="machines" onchange="selectMachine(this.value)">
+        <option value="">טוען מחשבים...</option>
+      </select>
     </div>
+    
+    <div>
+      <label for="log-datetime">בחר תאריך ושעה:</label>
+      <input type="datetime-local" id="log-datetime">
+      <button onclick="fetchLogsByDate()">חפש לוגים לפי תאריך</button>
+    </div>
+    
+    <div>
+      <button onclick="fetchAllLogs()">הצג את כל הלוגים</button>
+      <button onclick="clearResults()">נקה תוצאות</button>
+    </div>
+  </div>
+  
+  <div id="debug-info"></div>
+  <div id="logs-container">
+    <h2>לוגים יוצגו כאן</h2>
+  </div>
+
+  <script src="keylogger.js"></script>
 </body>
 </html>
