@@ -1,26 +1,36 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>Keylogger Logs</title>
+  <title>צפייה בלוגים</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- בחירת מחשב -->
   <div id="machines-page">
     <h1>בחר מחשב</h1>
     <div id="machines-container"></div>
   </div>
-
+  
+  <!-- בחירת תאריך ולוגים -->
   <div id="logs-page" style="display:none;">
     <button id="back-btn">⬅ חזור</button>
     <h1 id="selected-machine"></h1>
-    <label>בחר תאריך: <input type="date" id="date-input"></label>
-    <label>בחר שעה: <input type="time" id="time-input"></label>
-    <button id="fetch-logs-btn">טען לוגים</button>
-
+    
+    <!-- כל הבקרות באותה שורה -->
+    <div class="controls-row">
+      <label for="date-select">בחר תאריך:</label>
+      <select id="date-select"></select>
+      
+      <label for="hour-select">בחר שעה:</label>
+      <select id="hour-select"></select>
+      
+      <button id="fetch-logs-btn">טען לוגים</button>
+    </div>
+    
     <div id="logs-container"></div>
   </div>
 
-  <script src="keylogger.js"></script>
+  <script src="./keylogger.js"></script>
 </body>
 </html>
