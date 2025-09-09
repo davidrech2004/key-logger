@@ -11,7 +11,8 @@ class NetworkWriter(IWriter):
     def send_data(self, data: str, machine_name: str) -> None:
         encrypted_data = self.encryptor.encrypt(data)
         payload = {"machine": machine_name, "data": encrypted_data}
-        url = f"{self.server_url}/api/upload"
+        url = f"{self.server_url}/api/machines/{machine_name}/logs"
+
 
         try:
             response = requests.post(url, json=payload, timeout=5)
